@@ -5,7 +5,7 @@ add_subdirectory(assets)
 set_target_properties(disboardImpl PROPERTIES AUTOMOC ON)
 
 find_package(Corrosion QUIET)
-if(NOT Corrosion_FOUND)
+if (NOT Corrosion_FOUND)
     include(FetchContent)
     FetchContent_Declare(
             Corrosion
@@ -14,7 +14,7 @@ if(NOT Corrosion_FOUND)
     )
 
     FetchContent_MakeAvailable(Corrosion)
-endif()
+endif ()
 
 set(CRATE disboard-rust)
 corrosion_import_crate(MANIFEST_PATH rust/Cargo.toml CRATES ${CRATE})
@@ -62,5 +62,4 @@ qt_add_qml_module(disboardImpl
         qml/BoardImpl.qml
 
         js/BoardView.mjs
-
         )
