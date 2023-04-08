@@ -1,10 +1,6 @@
 import QtQuick
 
 Square {
-    z: 11
-
-    id: legal_move_canvas
-
     Rectangle {
         anchors.centerIn: parent
 

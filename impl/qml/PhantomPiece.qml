@@ -11,8 +11,6 @@ BasePiece {
     x: centerX - size / 2
     y: centerY - size / 2
 
-    id: phantomPiece
-
     visible: false
 
     pieceId: 0

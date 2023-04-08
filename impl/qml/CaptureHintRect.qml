@@ -1,10 +1,6 @@
 import QtQuick
 
 Square {
-    z: 11
-
-    id: legal_capture_canvas
-
     Rectangle {
         anchors.fill: parent
 

@@ -361,12 +361,19 @@ impl BoardConImpl {
     }
 
     fn show_hints(&self, sq: sac::Square) {
-        let move_vec = self
+        let mut move_vec = self
             .position()
             .legal_moves()
             .into_iter()
             .filter(|v| v.from().unwrap() == sq)
             .collect::<Vec<sac::Move>>();
+        move_vec.dedup_by(|l, r| {
+            if !l.is_promotion() || !r.is_promotion() {
+                return false;
+            }
+
+            l.to() == r.to()
+        });
 
         let (castling_move_vec, move_vec): (Vec<sac::Move>, Vec<sac::Move>) =
             move_vec.into_iter().partition(|m| m.is_castle());

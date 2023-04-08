@@ -1,10 +1,6 @@
 import QtQuick
 
 Square {
-    z: 0
-
-    id: highlightRect
-
     Rectangle {
         anchors.fill: parent
 

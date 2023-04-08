@@ -3,19 +3,19 @@ import QtQuick
 Item {
     property alias dragPos: dragController.curPos
 
-    id: dragArea
     signal clicked(real x, real y)
     signal dragEnded(real srcX, real srcY, real destX, real destY)
     signal dragStarted(real srcX, real srcY, real destX, real destY)
     signal scrolled(real delta);
 
-    //    onDragChanged: console.log("dragging changed:", drag)
-    Item {
-        id: clickedController
+    id: dragArea
 
+    QtObject {
         property point initialPos: Qt.point(0, 0)
 
         signal clicked(real x, real y)
+
+        id: clickedController
 
         function pressed(event) {
             initialPos.x = event.x;
@@ -31,15 +31,16 @@ Item {
             dragArea.clicked(x, y);
         }
     }
-    Item {
-        id: dragController
 
+    QtObject {
         property point curPos: Qt.point(0, 0)
         property bool drag: false
         property point initialPos: Qt.point(0, 0)
 
         signal dragEnded(real srcX, real srcY, real destX, real destY)
         signal dragStarted(real srcX, real srcY, real destX, real destY)
+
+        id: dragController
 
         function pos_changed(event, pressed) {
             if (!pressed)
@@ -82,9 +83,11 @@ Item {
             dragArea.dragStarted(srcX, srcY, destX, destY);
         }
     }
+
     MouseArea {
-        id: inner
         anchors.fill: parent
+
+        id: inner
 
         onPositionChanged: function (mouse) {
             dragController.pos_changed(mouse, pressed);

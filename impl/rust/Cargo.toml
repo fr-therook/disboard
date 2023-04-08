@@ -14,8 +14,8 @@ cxx-qt-lib = "0.5"
 sac = { package = "sacrifice", version = "0.1.8"}
 
 [dependencies.uuid]
-version = "1.3.0"
-features = ["v4", "fast-rng", "macro-diagnostics"]
+version = "1.3"
+features = ["v4", "fast-rng"]
 
 [build-dependencies]
 cxx-qt-build = "0.5"

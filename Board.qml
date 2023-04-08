@@ -1,25 +1,19 @@
 import QtQuick
+
 import disboard.impl
 
 Item {
-    readonly property int boardSize: pieceSize * 8
-    readonly property int pieceSize: Math.floor(Math.min(width, height) / 8)
-
-    readonly property alias pgn: board.pgn
-
-    id: canvas
+    readonly property alias pgn: boardImpl.pgn
 
     BoardImpl {
+        readonly property int boardSize: pieceSize << 3
+        pieceSize: Math.min(parent.width, parent.height) >> 3
+
         anchors.centerIn: parent
 
-        width: canvas.boardSize
-        height: canvas.boardSize
+        width: boardSize
+        height: boardSize
 
-        id: board
-
-        pieceSize: canvas.pieceSize
-    }
-
-    Component.onCompleted: {
+        id: boardImpl
     }
 }
