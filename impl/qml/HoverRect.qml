@@ -1,11 +1,6 @@
 import QtQuick
 
 Square {
-    property int mouseX: 0
-    property int mouseY: 0
-
-    square: (7 - Math.floor(mouseY / size)) * 8 + Math.floor(mouseX / size)
-
     Rectangle {
         anchors.fill: parent
 

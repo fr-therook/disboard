@@ -12,6 +12,4 @@ BasePiece {
     y: centerY - size / 2
 
     visible: false
-
-    pieceId: 0
 }

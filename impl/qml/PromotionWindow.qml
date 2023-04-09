@@ -6,9 +6,11 @@ Pane {
     required property int pieceSize
     required property int file
     required property bool side // 0: bottom, 1: top
-    required property bool isWhite
+    required property var pieces
 
-    signal selected(int piece)
+    readonly property var revPieces: pieces != null ? pieces.slice().reverse() : null
+
+    signal selected(var piece)
 
     width: pieceSize
     height: pieceSize * 4
@@ -25,7 +27,7 @@ Pane {
         spacing: 0
 
         Repeater {
-            model: promotionWindow.side ? [4, 1, 3, 2] : [2, 3, 1, 4]
+            model: promotionWindow.side ? pieces : revPieces
 
             ItemDelegate {
                 width: parent.width
@@ -34,7 +36,7 @@ Pane {
                 padding: 4
 
                 contentItem: BasePiece {
-                    pieceId: promotionWindow.isWhite ? modelData : modelData + 10
+                    piece: modelData
                     sourceSize: width
                 }
 

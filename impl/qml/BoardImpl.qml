@@ -1,5 +1,6 @@
 import QtQuick
-import fr.therook.ui
+
+import disboard.impl.controller
 
 import "../js/BoardView.mjs" as BoardView
 
@@ -13,9 +14,9 @@ Item {
     QtObject {
         readonly property var component: Qt.createComponent("Piece.qml")
 
-        function componentConstructor(id, square) {
+        function componentConstructor(piece, square) {
             return component.createObject(board, {
-                "pieceId": id,
+                "piece": piece,
                 "square": square,
                 "size": Qt.binding(function () {
                     return board.pieceSize
@@ -32,16 +33,17 @@ Item {
     }
 
     QtObject {
-        property int file: boardCon.promotingFile
+        readonly property var square: boardCon.promotionSq
 
         readonly property var component: Qt.createComponent("PromotionWindow.qml")
         property var createdObject: null
 
-        function componentConstructor(new_file) {
+        function componentConstructor(newSq) {
+            const isWhite = newSq.rank >= 4;
             return component.createObject(board, {
-                "file": new_file < 10 ? new_file : new_file - 10,
-                "side": new_file < 10,
-                "isWhite": new_file < 10,
+                "file": newSq.file,
+                "pieces": boardCon.promotionPieces,
+                "side": isWhite,
                 "pieceSize": Qt.binding(function () {
                     return board.pieceSize
                 }),
@@ -50,9 +52,9 @@ Item {
 
         id: promotionWindow
 
-        function open(new_file) {
+        function open(newSquare) {
             close();
-            createdObject = componentConstructor(new_file);
+            createdObject = componentConstructor(newSquare);
             createdObject.selected.connect(function (piece) {
                 boardCon.promote(piece);
             });
@@ -66,21 +68,22 @@ Item {
             createdObject = null;
         }
 
-        onFileChanged: {
-            if (file < 0) close();
-            else open(file);
+        onSquareChanged: {
+            if (square == null) close();
+            else open(square);
         }
     }
 
     Component.onCompleted: {
-        boardCon.initialize();
         pieceView.inner.connect(boardCon);
         boardCon.resyncBoard();
     }
 
-    BoardCon {
+    Controller {
         id: boardCon
+
         pieceSize: board.pieceSize
+        dragPos: dragArea.dragPos
     }
 
     DragArea {
@@ -114,7 +117,7 @@ Item {
             model: boardCon.hintSq
 
             HintRect {
-                required property int modelData
+                required property var modelData
 
                 square: modelData
                 size: board.pieceSize
@@ -125,7 +128,7 @@ Item {
             model: boardCon.captureSq
 
             CaptureHintRect {
-                required property int modelData
+                required property var modelData
 
                 square: modelData
                 size: board.pieceSize
@@ -137,7 +140,7 @@ Item {
         anchors.fill: parent
 
         HighlightRect {
-            square: boardCon.highlightSq
+            square: boardCon.highlightedSq
             size: board.pieceSize
         }
         HighlightRect {
@@ -160,11 +163,11 @@ Item {
 
             z: 1
 
-            visible: boardCon.phantomId >= 0
-            pieceId: boardCon.phantomId < 0 ? 0 : boardCon.phantomId
+            visible: boardCon.phantom != null
+            piece: boardCon.phantom
 
-            centerX: dragArea.dragPos.x
-            centerY: dragArea.dragPos.y
+            centerX: boardCon.dragPos.x
+            centerY: boardCon.dragPos.y
 
             size: board.pieceSize
             sourceSize: board.pieceSize
@@ -175,9 +178,8 @@ Item {
 
             z: 0
 
-            visible: boardCon.phantomId >= 0
-            mouseX: dragArea.dragPos.x
-            mouseY: dragArea.dragPos.y
+            visible: boardCon.phantom != null
+            square: boardCon.dragSq
 
             size: board.pieceSize
         }

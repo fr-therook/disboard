@@ -1,7 +1,7 @@
 import QtQuick
 
 Square {
-    required property int pieceId
+    required property var piece
     required property int sourceSize
     property bool animationEnabled: false
 
@@ -16,7 +16,7 @@ Square {
 
         id: basePiece
 
-        pieceId: piece_canvas.pieceId // required properties does not work with aliases
+        piece: piece_canvas.piece // required properties does not work with aliases
         sourceSize: piece_canvas.sourceSize
     }
 

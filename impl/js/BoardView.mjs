@@ -6,9 +6,9 @@ export class Piece {
 
     connect(boardCon) {
         const this_out = this;
-        boardCon.placePiece.connect(function (id, square) {
+        boardCon.placePiece.connect(function (piece, square) {
             this_out.place(
-                id, square
+                piece, square
             );
         });
         boardCon.movePiece.connect(function (src, dest) {
@@ -23,21 +23,21 @@ export class Piece {
     }
 
     remove(square) {
-        const piece = this.pieceVec[square];
+        const piece = this.pieceVec[square.index];
         if (piece == null) return;
-        this.pieceVec[square] = null;
+        this.pieceVec[square.index] = null;
         piece.destroy();
     }
 
-    place(id, square) {
+    place(piece, square) {
         this.remove(square);
 
-        const new_piece = this.componentConstructor(id, square);
-        this.pieceVec[square] = new_piece;
+        const new_piece = this.componentConstructor(piece, square);
+        this.pieceVec[square.index] = new_piece;
     }
 
     move(src, dest) {
-        const srcPiece = this.pieceVec[src];
+        const srcPiece = this.pieceVec[src.index];
         if (srcPiece == null) return;
 
         this.remove(dest);
@@ -46,33 +46,38 @@ export class Piece {
         srcPiece.square = dest;
         srcPiece.animationEnabled = false;
 
-        this.pieceVec[src] = null;
-        this.pieceVec[dest] = srcPiece;
+        this.pieceVec[src.index] = null;
+        this.pieceVec[dest.index] = srcPiece;
     }
 
     reset(squares, pieces) {
-        const initial = squares.map(function(e, i) {
-            return [e, pieces[i]];
-        });
+        var initial = [];
+        var i = 0;
+        while (i < squares.length) {
+            initial.push([squares[i], pieces[i]]);
+            i += 1;
+        }
 
         const prevPieceVec = this.pieceVec;
         this.pieceVec = Array(64).fill(null);
 
         for (const val of initial) {
             const square = val[0];
-            const pieceId = val[1];
+            const piece = val[1];
 
-            if (prevPieceVec[square] != null) {
-                if (prevPieceVec[square].pieceId == pieceId) {
+            const idx = square.index;
+
+            if (prevPieceVec[idx] != null) {
+                if (prevPieceVec[idx].piece == piece) {
                     // Move piece to new array
-                    this.pieceVec[square] = prevPieceVec[square];
-                    prevPieceVec[square] = null;
+                    this.pieceVec[idx] = prevPieceVec[idx];
+                    prevPieceVec[idx] = null;
                     continue;
                 }
             }
 
-            const new_piece = this.componentConstructor(pieceId, square);
-            this.pieceVec[square] = new_piece;
+            const new_piece = this.componentConstructor(piece, square);
+            this.pieceVec[idx] = new_piece;
         }
 
         for (const piece of prevPieceVec) {
