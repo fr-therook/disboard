@@ -1,13 +1,13 @@
 import QtQuick
 
 Item {
-    property int square: -1
+    property var square: null
     required property int size
 
-    readonly property int rank: square >= 0 ? square >> 3 : 0
-    readonly property int file: square >= 0 ? square & 7 : 0
+    readonly property int file: square != null ? square.file : 0
+    readonly property int rank: square != null ? square.rank : 0
 
-    visible: square >= 0
+    visible: square != null
 
     width: size
     height: size

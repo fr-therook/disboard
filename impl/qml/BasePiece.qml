@@ -1,15 +1,11 @@
 import QtQuick
 
 Item {
-    required property int pieceId
+    required property var piece
     required property int sourceSize
 
     QtObject {
-        readonly property bool isWhite: pieceId < 10
-        readonly property int normPieceId: isWhite ? pieceId : pieceId - 10
-
-        readonly property var uriMapping: ["P", "N", "B", "R", "Q", "K"]
-        readonly property var uriName: (isWhite ? "w" : "b") + uriMapping[normPieceId]
+        readonly property string uriName: piece ? piece.pieceStr : "bN"
 
         readonly property string pieceUri: "qrc:/chess/pieces/" + uriName + ".svg"
 
@@ -26,7 +22,7 @@ Item {
 
         fillMode: Image.Pad
         smooth: false
-        cache: false
-        asynchronous: true
+        cache: true
+        asynchronous: false
     }
 }
