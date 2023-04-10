@@ -7,37 +7,35 @@
 #include "librustdisboard/lib.h"
 
 namespace disboard {
+    using librustdisboard::Color;
+    using librustdisboard::Role;
+
     class Piece {
     Q_GADGET
         QML_VALUE_TYPE(piece)
-        Q_PROPERTY(Color color MEMBER mColor)
-        Q_PROPERTY(Role role MEMBER mRole)
+        Q_PROPERTY(Color color READ color)
+        Q_PROPERTY(Role role READ role)
         Q_PROPERTY(QString roleStr READ roleStr)
         Q_PROPERTY(QString pieceStr READ pieceStr)
+        QML_UNCREATABLE("Piece can only be created on Rust side")
 
     public:
-        enum Color {
-            Black = 0,
-            White = 1,
-        };
-        enum Role {
-            Pawn = 1,
-            Knight = 2,
-            Bishop = 3,
-            Rook = 4,
-            Queen = 5,
-            King = 6,
-        };
+        Piece(Color color, Role role);
+        Piece();
 
-        explicit Piece(librustdisboard::Piece piece);
-        Piece(Color color, Role role) : mColor(color), mRole(role) {}
-        Piece() : Piece(Color::Black, Role::Knight) {}
+        Color color() const;
+        Role role() const;
 
-        QString roleStr();
-        QString pieceStr();
+        QString roleStr() const;
+        QString pieceStr() const;
 
-        Color mColor;
-        Role mRole;
+        friend class Disboard;
+
+    private:
+        explicit Piece(librustdisboard::Piece piece)
+            : impl(std::move(piece)) {}
+
+        librustdisboard::Piece impl;
     };
 }
 

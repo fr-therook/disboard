@@ -2,6 +2,8 @@
 
 #include <QDebug>
 
+using namespace disboard;
+
 QUuid from_uuid(librustdisboard::Uuid uuid) {
     return QUuid{
             uuid.l, uuid.w1, uuid.w2,
@@ -20,102 +22,101 @@ librustdisboard::Uuid from_quuid(QUuid uuid) {
     };
 }
 
-disboard::Disboard::Disboard() : tree(librustdisboard::new_game()) {
+Disboard::Disboard()
+    : tree(librustdisboard::game_default()) {
     qDebug() << "initializing disboard ffi";
 }
 
-QUuid disboard::Disboard::root() {
+QUuid Disboard::root() const {
     return from_uuid(tree->root());
 }
 
-bool disboard::Disboard::whites_turn(QUuid node) {
-    auto position = tree->position(from_quuid(node));
-    return position->turn() == librustdisboard::Color::White;
-}
-
-std::tuple<QVector<disboard::Square>, QVector<disboard::Piece>>
-disboard::Disboard::pieces(QUuid node) {
+std::tuple<QVector<Square>, QVector<Piece>>
+Disboard::pieces(QUuid node) const {
     auto position = tree->position(from_quuid(node));
     auto _squares = position->squares();
     auto _pieces = position->pieces();
 
-    QVector<disboard::Square> squares;
-    QVector<disboard::Piece> pieces;
+    QVector<Square> squares;
+    QVector<Piece> pieces;
     for (auto square: _squares) {
-        squares.emplace_back(square);
+        squares.push_back(Square{square});
     }
     for (auto piece: _pieces) {
-        pieces.emplace_back(piece);
+        pieces.push_back(Piece{piece});
     }
 
     return std::make_tuple(squares, pieces);
 }
 
-std::optional<disboard::Piece> disboard::Disboard::pieceAt(QUuid node, disboard::Square square) {
+std::optional<Piece> Disboard::pieceAt(QUuid node, Square square) const {
     auto position = tree->position(from_quuid(node));
-    librustdisboard::Square _square{square.index()};
-    if (position->has_piece_at(_square)) {
-        auto piece = position->piece_at(_square);
-        return disboard::Piece(piece);
+    if (position->has_piece_at(square.impl)) {
+        auto piece = position->piece_at(square.impl);
+        return Piece(piece);
     }
     return {};
 }
 
-std::optional<rust::Box<librustdisboard::Move>>
-disboard::Disboard::legalMove(QUuid node, disboard::Square from, disboard::Square to) {
+std::optional<Move>
+Disboard::legalMove(QUuid node, Square from, Square to) const {
     auto position = tree->position(from_quuid(node));
-    librustdisboard::Square src_sq{from.index()};
-    librustdisboard::Square dest_sq{to.index()};
-    if (position->has_legal_move(src_sq, dest_sq)) {
-        return position->legal_move(src_sq, dest_sq);
+    if (position->has_legal_move(from.impl, to.impl)) {
+        return Move{
+            position->legal_move(from.impl, to.impl)
+        };
     }
     return {};
 }
 
-std::optional<rust::Box<librustdisboard::Move>>
-disboard::Disboard::lastMove(QUuid node) {
+std::optional<Move>
+Disboard::lastMove(QUuid node) const {
     auto _node = from_quuid(node);
     if (tree->has_prev_move(_node)) {
-        return tree->prev_move(_node);
-    }
+        return Move{
+            tree->prev_move(_node)
+        };
+}
     return {};
 }
 
-std::tuple<QVector<disboard::Square>, QVector<disboard::Square>>
-disboard::Disboard::hints(QUuid node, disboard::Square from) {
+std::tuple<QVector<Square>, QVector<Square>>
+Disboard::hints(QUuid node, Square from) const {
     auto position = tree->position(from_quuid(node));
-    librustdisboard::Square _from{from.index()};
 
-    auto hint_vec = position->hints(_from);
-    auto capture_vec = position->captures(_from);
+    auto hint_vec = position->hints(from.impl);
+    auto capture_vec = position->captures(from.impl);
 
-    QVector<disboard::Square> hints, captures;
+    QVector<Square> hints, captures;
     for (auto square: hint_vec) {
-        hints.emplace_back(square);
+        hints.emplace_back(Square{square});
     }
     for (auto square: capture_vec) {
-        captures.emplace_back(square);
+        captures.emplace_back(Square{square});
     }
 
     return std::make_tuple(hints, captures);
 }
 
-std::optional<QUuid> disboard::Disboard::prevNode(QUuid node) {
+std::optional<QUuid> Disboard::prevNode(QUuid node) const {
     if (!tree->has_prev_node(from_quuid(node))) return {};
     return from_uuid(tree->prev_node(from_quuid(node)));
 }
 
-std::optional<QUuid> disboard::Disboard::nextMainlineNode(QUuid node) {
+std::optional<QUuid> Disboard::nextMainlineNode(QUuid node) const {
     if (!tree->has_next_mainline_node(from_quuid(node))) return {};
     return from_uuid(tree->next_mainline_node(from_quuid(node)));
 }
 
-QUuid disboard::Disboard::addNode(QUuid node, rust::Box<librustdisboard::Move> move) {
-    auto new_node = tree->add_node(from_quuid(node), std::move(move));
+QUuid Disboard::addNode(QUuid node, Move move) {
+    auto new_node = tree->add_node(
+            from_quuid(node),
+            std::move(move.impl)
+            );
     return from_uuid(new_node);
 }
 
-QString disboard::Disboard::pgn() {
+QString Disboard::pgn() const {
     auto pgn = tree->pgn();
     std::string pgnStr{pgn};
     return QString::fromStdString(pgnStr);

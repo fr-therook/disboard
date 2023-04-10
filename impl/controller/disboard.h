@@ -5,6 +5,7 @@
 
 #include "square.h"
 #include "piece.h"
+#include "move.h"
 
 #include <QUuid>
 
@@ -13,27 +14,23 @@ namespace disboard {
     public:
         Disboard();
 
-        QUuid root();
+        QUuid root() const;
 
-        bool whites_turn(QUuid node);
+        std::tuple<QVector<Square>, QVector<Piece>> pieces(QUuid node) const;
+        std::optional<Piece> pieceAt(QUuid node, Square square) const;
+        std::optional<Move> legalMove(QUuid node, Square from, Square to) const;
 
-        std::tuple<QVector<disboard::Square>, QVector<disboard::Piece>> pieces(QUuid node);
-        std::optional<disboard::Piece> pieceAt(QUuid node, disboard::Square square);
-        std::optional<rust::Box<librustdisboard::Move>>
-            legalMove(QUuid node, disboard::Square from, disboard::Square to);
+        std::optional<Move> lastMove(QUuid node) const;
 
-        std::optional<rust::Box<librustdisboard::Move>>
-            lastMove(QUuid node);
+        std::tuple<QVector<Square>, QVector<Square>>
+            hints(QUuid node, Square from) const;
 
-        std::tuple<QVector<disboard::Square>, QVector<disboard::Square>>
-            hints(QUuid node, disboard::Square from);
+        std::optional<QUuid> prevNode(QUuid node) const;
+        std::optional<QUuid> nextMainlineNode(QUuid node) const;
 
-        std::optional<QUuid> prevNode(QUuid node);
-        std::optional<QUuid> nextMainlineNode(QUuid node);
+        QUuid addNode(QUuid node, Move move);
 
-        QUuid addNode(QUuid node, rust::Box<librustdisboard::Move> move);
-
-        QString pgn();
+        QString pgn() const;
 
     private:
         rust::Box<librustdisboard::GameTree> tree;

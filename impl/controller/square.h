@@ -10,26 +10,30 @@ namespace disboard {
     class Square {
     Q_GADGET
         QML_VALUE_TYPE(square)
-        Q_PROPERTY(uint8_t index MEMBER mIndex)
+        Q_PROPERTY(uint8_t index READ index)
         Q_PROPERTY(uint8_t file READ file)
         Q_PROPERTY(uint8_t rank READ rank)
     public:
-        explicit Square(uint8_t index)
-                : mIndex(index) {}
-        explicit Square(librustdisboard::Square square)
-            : Square(square.index) {}
-        Square() : Square(0) {}
+        Square() : impl(librustdisboard::square_default()) {}
+        Square(uint8_t file, uint8_t rank)
+                : impl(librustdisboard::square_from_coords(file, rank)) {}
 
-        uint8_t index() { return mIndex; }
-        uint8_t file() { return mIndex & 7; }
-        uint8_t rank() { return mIndex >> 3; }
+        uint8_t index() const { return impl.index; }
+        uint8_t file() const { return impl.file(); }
+        uint8_t rank() const { return impl.rank(); }
 
-        bool operator==(Square& rhs) {
-            return this->index() == rhs.index();
+        bool operator==(Square &rhs) {
+            return impl == rhs.impl;
         }
 
+        friend class Disboard;
+        friend class Move;
+
     private:
-        uint8_t mIndex;
+        explicit Square(librustdisboard::Square square)
+                : impl(std::move(square)) {}
+
+        librustdisboard::Square impl;
     };
 }
 

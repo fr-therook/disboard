@@ -27,18 +27,25 @@ mod ffi {
         pub color: Color,
         pub role: Role,
     }
+    extern "Rust" {
+        fn piece_default() -> Piece;
+    }
 
+    #[derive(PartialEq)]
     pub struct Square {
         pub index: u8,
     }
 
     extern "Rust" {
+        fn square_default() -> Square;
+        fn square_from_coords(file: u8, rank: u8) -> Square;
         fn file(self: &Square) -> u8;
         fn rank(self: &Square) -> u8;
     }
 
     extern "Rust" {
         type Move;
+        fn clone(&self) -> Box<Move>;
         fn from(&self) -> Square;
         fn to(&self) -> Square;
         fn is_promotion(&self) -> bool;
@@ -67,7 +74,7 @@ mod ffi {
 
     extern "Rust" {
         type GameTree;
-        fn new_game() -> Box<GameTree>;
+        fn game_default() -> Box<GameTree>;
 
         fn root(&self) -> Uuid;
         fn position(&self, node: Uuid) -> Box<CurPosition>;
@@ -105,41 +112,30 @@ impl Into<uuid::Uuid> for ffi::Uuid {
     }
 }
 
-impl Into<ffi::Color> for sac::Color {
-    fn into(self) -> ffi::Color {
-        match self {
-            sac::Color::Black => ffi::Color::Black,
-            sac::Color::White => ffi::Color::White,
+macro_rules! convert_enum {
+    ($src: ty, $dst: ty, $($variant: ident,)+) => {
+        impl Into<$dst> for $src {
+            fn into(self) -> $dst {
+                match self {
+                    $(Self::$variant => <$dst>::$variant,)*
+                    _ => panic!(),
+                }
+            }
         }
     }
 }
 
-impl Into<ffi::Role> for sac::Role {
-    fn into(self) -> ffi::Role {
-        match self {
-            sac::Role::Pawn => ffi::Role::Pawn,
-            sac::Role::Knight => ffi::Role::Knight,
-            sac::Role::Bishop => ffi::Role::Bishop,
-            sac::Role::Rook => ffi::Role::Rook,
-            sac::Role::Queen => ffi::Role::Queen,
-            sac::Role::King => ffi::Role::King,
-        }
-    }
-}
+convert_enum!(
+    sac::Color, ffi::Color, Black, White,
+);
 
-impl Into<sac::Role> for ffi::Role {
-    fn into(self) -> sac::Role {
-        match self {
-            ffi::Role::Pawn => sac::Role::Pawn,
-            ffi::Role::Knight => sac::Role::Knight,
-            ffi::Role::Bishop => sac::Role::Bishop,
-            ffi::Role::Rook => sac::Role::Rook,
-            ffi::Role::Queen => sac::Role::Queen,
-            ffi::Role::King => sac::Role::King,
-            _ => sac::Role::Pawn,
-        }
-    }
-}
+convert_enum!(
+    sac::Role, ffi::Role, Pawn, Knight, Bishop, Rook, Queen, King,
+);
+
+convert_enum!(
+    ffi::Role, sac::Role, Pawn, Knight, Bishop, Rook, Queen, King,
+);
 
 impl Into<ffi::Piece> for sac::Piece {
     fn into(self) -> ffi::Piece {
@@ -147,6 +143,13 @@ impl Into<ffi::Piece> for sac::Piece {
             color: self.color.into(),
             role: self.role.into(),
         }
+    }
+}
+
+fn piece_default() -> ffi::Piece {
+    ffi::Piece {
+        color: ffi::Color::Black,
+        role: ffi::Role::Knight,
     }
 }
 
@@ -164,11 +167,26 @@ impl Into<sac::Square> for ffi::Square {
     }
 }
 
+fn square_default() -> ffi::Square {
+    ffi::Square {
+        index: 0
+    }
+}
+
+fn square_from_coords(file: u8, rank: u8) -> ffi::Square {
+    let sq = sac::Square::from_coords(
+        sac::File::new(file as u32),
+        sac::Rank::new(rank as u32)
+    );
+    ffi::Square {
+        index: u8::from(sq),
+    }
+}
+
 impl ffi::Square {
     fn file(&self) -> u8 {
         self.index & 7
     }
-
     fn rank(&self) -> u8 {
         self.index >> 3
     }
@@ -177,6 +195,10 @@ impl ffi::Square {
 struct Move(sac::Move);
 
 impl Move {
+    fn clone(&self) -> Box<Move> {
+        Box::new(Move(self.0.clone()))
+    }
+
     fn from(&self) -> ffi::Square {
         self.0.from()
             .expect("a chess move always comes from somewhere")
@@ -273,10 +295,7 @@ impl CurPosition {
         let square: sac::Square = square.into();
         self.0.board().piece_at(square)
             .map(|val| val.into())
-            .unwrap_or(ffi::Piece {
-                color: ffi::Color::Black,
-                role: ffi::Role::Pawn,
-            })
+            .unwrap_or(piece_default())
     }
 
     fn has_legal_move(&self, src: ffi::Square, dest: ffi::Square) -> bool {
@@ -391,11 +410,9 @@ struct GameTree {
     inner: sac::Game,
 }
 
-fn new_game() -> Box<GameTree> {
-    let inner = sac::Game::default();
-
+fn game_default() -> Box<GameTree> {
     Box::new(GameTree {
-        inner
+        inner: sac::Game::default()
     })
 }
 

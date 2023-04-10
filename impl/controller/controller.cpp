@@ -1,17 +1,13 @@
 #include "controller.h"
 
-#include <QDebug>
-
 #include <optional>
 #include <tuple>
 
-#include "disboard.h"
+disboard::Square coord_to_square(float x, float y, int piece_size) {
+    uint8_t file = ((int) x) / piece_size;
+    uint8_t rank = 7 - ((int) y) / piece_size;
 
-uint8_t coord_to_square(float x, float y, int piece_size) {
-    uint32_t file = ((int) x) / piece_size;
-    uint32_t rank = 7 - ((int) y) / piece_size;
-
-    return (rank << 3) | file;
+    return disboard::Square{file, rank};
 }
 
 class Controller::p {
@@ -26,13 +22,11 @@ public:
         emit q->resetBoard(squares, pieces);
     }
 
-    void clicked(uint8_t sq_index) {
+    void clicked(disboard::Square sq) {
         auto _highlightedSq = highlightedSq;
         highlightedSq.reset();
 
         if (cancelPromotion()) return;
-
-        auto sq = disboard::Square(sq_index);
 
         if (_highlightedSq.has_value()) {
             auto srcSq = *_highlightedSq;
@@ -58,12 +52,10 @@ public:
         highlightedSq = sq;
     }
 
-    void dragStarted(uint8_t sq_index) {
+    void dragStarted(disboard::Square sq) {
         highlightedSq.reset();
 
         if (cancelPromotion()) return;
-
-        auto sq = disboard::Square(sq_index);
 
         auto piece = board.pieceAt(curNode, sq);
         if (!piece.has_value()) {
@@ -82,12 +74,11 @@ public:
         emit q->removePiece(sq);
     }
 
-    void dragEnded(uint8_t sq_index) {
+    void dragEnded(disboard::Square destSq) {
         auto _dragged = dragged;
         dragged = {};
         if (!_dragged.has_value()) return;
 
-        auto destSq = disboard::Square(sq_index);
         auto srcSq = _dragged->square;
         auto piece = _dragged->piece;
 
@@ -108,29 +99,29 @@ public:
 
     void promote(disboard::Piece piece) {
         auto _promotion = std::move(promotion);
-        promotion = {};
+        promotion = std::nullopt;
         if (!_promotion.has_value()) {
             qDebug() << "Nothing to promote...";
             return;
         }
-        librustdisboard::Role _role;
-        switch (piece.mRole) {
-            case disboard::Piece::Role::Knight:
-                _role = librustdisboard::Role::Knight;
+        disboard::Role _role;
+        switch (piece.role()) {
+            case disboard::Role::Knight:
+                _role = disboard::Role::Knight;
                 break;
-            case disboard::Piece::Role::Rook:
-                _role = librustdisboard::Role::Rook;
+            case disboard::Role::Rook:
+                _role = disboard::Role::Rook;
                 break;
-            case disboard::Piece::Role::Bishop:
-                _role = librustdisboard::Role::Bishop;
+            case disboard::Role::Bishop:
+                _role = disboard::Role::Bishop;
                 break;
             default:
-                _role = librustdisboard::Role::Queen;
+                _role = disboard::Role::Queen;
                 break;
         }
-        (*_promotion)->set_promotion(_role);
+        (*_promotion).setPromotion(_role);
 
-        emit q->placePiece(piece, disboard::Square((*_promotion)->to()));
+        emit q->placePiece(piece, (*_promotion).to());
 
         applyMove(std::move(*_promotion));
     }
@@ -152,10 +143,10 @@ private:
     };
 
     std::optional<DraggedPiece> dragged;
-    std::optional<rust::Box<librustdisboard::Move>> promotion;
+    std::optional<disboard::Move> promotion;
 
-    void tryApplyMove(rust::Box<librustdisboard::Move> m) {
-        if (m->is_promotion()) {
+    void tryApplyMove(disboard::Move m) {
+        if (m.isPromotion()) {
             promotion.emplace(
                     std::move(m)
             );
@@ -164,23 +155,23 @@ private:
             return;
         }
 
-        if (m->is_en_passant()) {
-            auto epSq = disboard::Square(m->from().rank() << 3 | m->to().file());
+        if (m.isEnPassant()) {
+            auto epSq = disboard::Square{m.to().file(), m.from().rank()};
             emit q->removePiece(epSq);
         }
 
-        if (m->is_castle()) {
+        if (m.isCastle()) {
             // move the rook
             emit q->movePiece(
-                    disboard::Square(m->castle_rook_from()),
-                    disboard::Square(m->castle_rook_to())
+                    disboard::Square(m.castleRookFrom()),
+                    disboard::Square(m.castleRookTo())
             );
         }
 
         applyMove(std::move(m));
     }
 
-    void applyMove(rust::Box<librustdisboard::Move> m) {
+    void applyMove(disboard::Move m) {
         auto newNode = board.addNode(curNode, std::move(m));
         q->setCurNode(newNode);
         emit q->treeChanged();
@@ -188,13 +179,13 @@ private:
 
     bool cancelPromotion() {
         auto _promotion = std::move(promotion);
-        promotion = {};
+        promotion = std::nullopt;
         if (!_promotion.has_value()) return false;
 
         emit q->promotionChanged();
 
-        auto fromSq = disboard::Square((*_promotion)->from());
-        auto toSq = disboard::Square((*_promotion)->to());
+        auto fromSq = (*_promotion).from();
+        auto toSq = (*_promotion).to();
         emit q->movePiece(toSq, fromSq);
 
         if (auto captured = board.pieceAt(curNode, toSq)) {
@@ -214,8 +205,7 @@ void Controller::resyncBoard() {
 }
 
 void Controller::coordClicked(float x, float y) {
-    auto sq_index = coord_to_square(x, y, pieceSize());
-    p->clicked(sq_index);
+    p->clicked(coord_to_square(x, y, pieceSize()));
     emit highlightedSqChanged();
 }
 
@@ -223,8 +213,7 @@ void Controller::coordDragStarted(
         float startX, float startY,
         float endX, float endY
 ) {
-    auto sq_index = coord_to_square(startX, startY, pieceSize());
-    p->dragStarted(sq_index);
+    p->dragStarted(coord_to_square(startX, startY, pieceSize()));
     emit highlightedSqChanged();
 }
 
@@ -232,8 +221,7 @@ void Controller::coordDragEnded(
         float startX, float startY,
         float endX, float endY
 ) {
-    auto sq_index = coord_to_square(endX, endY, pieceSize());
-    p->dragEnded(sq_index);
+    p->dragEnded(coord_to_square(endX, endY, pieceSize()));
     emit dragChanged();
 }
 
@@ -285,31 +273,31 @@ void Controller::setCurNode(QUuid newValue) {
 QVariant Controller::promotionSq() {
     if (!p->promotion.has_value()) return {};
 
-    auto sq = (*p->promotion)->to();
-    return QVariant::fromValue(disboard::Square(sq));
+    auto sq = (*p->promotion).to();
+    return QVariant::fromValue(sq);
 }
 
 QVariant Controller::promotionPieces() {
     if (!p->promotion.has_value()) return {};
 
-    auto sq = (*p->promotion)->to();
+    auto sq = (*p->promotion).to();
     auto color = sq.rank() >= 4 ?
-                 disboard::Piece::Color::White : disboard::Piece::Color::Black;
+                 disboard::Color::White : disboard::Color::Black;
     auto queen = disboard::Piece(
             color,
-            disboard::Piece::Role::Queen
+            disboard::Role::Queen
     );
     auto knight = disboard::Piece(
             color,
-            disboard::Piece::Role::Knight
+            disboard::Role::Knight
     );
     auto rook = disboard::Piece(
             color,
-            disboard::Piece::Role::Rook
+            disboard::Role::Rook
     );
     auto bishop = disboard::Piece(
             color,
-            disboard::Piece::Role::Bishop
+            disboard::Role::Bishop
     );
 
     auto vec = QVector<disboard::Piece>{queen, knight, rook, bishop};
@@ -335,12 +323,12 @@ void Controller::setDragPos(QPointF newValue) {
 }
 
 disboard::Square Controller::dragSq() {
-    return disboard::Square(
+    return {
             coord_to_square(
                     mDragPos.x(), mDragPos.y(),
                     std::max(pieceSize(), 1)
             )
-    );
+    };
 }
 
 QVariant Controller::highlightedSq() {
@@ -353,7 +341,7 @@ QVariant Controller::highlightedSq() {
 QVariant Controller::lastSrcSq() {
     if (auto val = p->board.lastMove(curNode())) {
         return QVariant::fromValue(
-                disboard::Square((*val)->from())
+                (*val).from()
         );
     }
     return {};
@@ -362,7 +350,7 @@ QVariant Controller::lastSrcSq() {
 QVariant Controller::lastDestSq() {
     if (auto val = p->board.lastMove(curNode())) {
         return QVariant::fromValue(
-                disboard::Square((*val)->to())
+                (*val).to()
         );
     }
     return {};

@@ -20,6 +20,8 @@ qt_add_qml_module(libcontroller
         square.h
         piece.cpp
         piece.h
+        move.cpp
+        move.h
         disboard.cpp
         disboard.h
         controller.cpp

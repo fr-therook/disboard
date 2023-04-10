@@ -1,55 +1,37 @@
 #include "piece.h"
 
-static disboard::Piece::Color fromColor(librustdisboard::Color color) {
-    switch (color) {
-        case librustdisboard::Color::Black:
-            return disboard::Piece::Color::Black;
-        case librustdisboard::Color::White:
-            return disboard::Piece::Color::White;
-    }
-}
+using namespace disboard;
 
-static disboard::Piece::Role fromRole(librustdisboard::Role role) {
-    switch (role) {
-        case librustdisboard::Role::Pawn:
-            return disboard::Piece::Role::Pawn;
-        case librustdisboard::Role::Knight:
-            return disboard::Piece::Role::Knight;
-        case librustdisboard::Role::Bishop:
-            return disboard::Piece::Role::Bishop;
-        case librustdisboard::Role::Rook:
-            return disboard::Piece::Role::Rook;
-        case librustdisboard::Role::Queen:
-            return disboard::Piece::Role::Queen;
-        case librustdisboard::Role::King:
-            return disboard::Piece::Role::King;
-    }
-}
+Piece::Piece(librustdisboard::Color color, librustdisboard::Role role)
+        : impl(librustdisboard::Piece{color, role}) {}
 
-disboard::Piece::Piece(librustdisboard::Piece piece)
-        : mColor(fromColor(piece.color)),
-          mRole(fromRole(piece.role)) {}
+Piece::Piece()
+        : impl(librustdisboard::piece_default()) {}
 
-QString disboard::Piece::roleStr() {
-    switch (mRole) {
-        case disboard::Piece::Role::Pawn:
+Color Piece::color() const { return impl.color; }
+
+Role Piece::role() const { return impl.role; }
+
+QString Piece::roleStr() const {
+    switch (impl.role) {
+        case Role::Pawn:
             return "P";
-        case disboard::Piece::Role::Knight:
+        case Role::Knight:
             return "N";
-        case disboard::Piece::Role::Bishop:
+        case Role::Bishop:
             return "B";
-        case disboard::Piece::Role::Rook:
+        case Role::Rook:
             return "R";
-        case disboard::Piece::Role::Queen:
+        case Role::Queen:
             return "Q";
-        case disboard::Piece::Role::King:
+        case Role::King:
             return "K";
     }
     return "";
 }
 
-QString disboard::Piece::pieceStr() {
-    if (mColor == disboard::Piece::Color::White) {
+QString Piece::pieceStr() const {
+    if (impl.color == Color::White) {
         return "w" + roleStr();
     }
     return "b" + roleStr();
