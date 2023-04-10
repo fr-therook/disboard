@@ -22,7 +22,7 @@ Item {
 
         fillMode: Image.Pad
         smooth: false
-        cache: false
-        asynchronous: true
+        cache: true
+        asynchronous: false
     }
 }
