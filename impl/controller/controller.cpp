@@ -173,7 +173,7 @@ private:
 
     void applyMove(disboard::Move m) {
         auto newNode = board.addNode(curNode, std::move(m));
-        q->setCurNode(newNode);
+        setCurNode(newNode);
         emit q->nodePushed(newNode);
         emit q->treeChanged();
     }
@@ -194,6 +194,14 @@ private:
         }
 
         return true;
+    }
+
+    void setCurNode(QUuid newValue) {
+        if (curNode == newValue) {
+            return;
+        }
+        curNode = newValue;
+        emit q->curNodeChanged();
     }
 };
 
@@ -236,7 +244,6 @@ void Controller::prevMove() {
     if (!prevNode.has_value()) return;
 
     setCurNode(*prevNode);
-    resyncBoard();
 }
 
 void Controller::nextMove() {
@@ -244,7 +251,6 @@ void Controller::nextMove() {
     if (!nextNode.has_value()) return;
 
     setCurNode(*nextNode);
-    resyncBoard();
 }
 
 int Controller::pieceSize() const {
@@ -271,8 +277,8 @@ void Controller::setCurNode(QUuid newValue) {
     if (p->curNode == newValue) {
         return;
     }
-    p->curNode = newValue;
-    emit curNodeChanged();
+    p->setCurNode(newValue);
+    resyncBoard();
 }
 
 QVariant Controller::promotionSq() const {

@@ -40,8 +40,22 @@ Window {
 
             delegate: ItemDelegate {
                 visible: model.node != null
+                horizontalPadding: 16
 
-                text: model.node != null ? model.move : ""
+                contentItem: RowLayout {
+                    Text {
+                        Layout.fillWidth: true
+
+                        text: model.node != null ? model.display : ""
+                    }
+
+                    Text {
+                        visible: model.variations != null
+                        text: model.variations != null ? "..." : ""
+                    }
+                }
+
+                onClicked: board.controller.curNode = model.node
             }
         }
     }

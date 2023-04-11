@@ -81,7 +81,7 @@ private:
                     auto topLeft = q->index(oldRow, 0);
                     auto bottomRight = q->index(newRow, 1);
                     mainlineNodes.push_back(node);
-                    emit q->dataChanged(topLeft, bottomRight, {NodeRole, DisplayRole});
+                    emit q->dataChanged(topLeft, bottomRight, {NodeRole, Qt::DisplayRole});
                     return;
                 }
 
@@ -96,6 +96,10 @@ private:
 
         // added node is a variation on an existing node
         // TODO: change node
+//        qDebug() << "variation idx:" << idx;
+
+        auto qIdx = q->index(idxToRow(idx), idxToCol(idx));
+        emit q->dataChanged(qIdx, qIdx, {VariationsRole});
     }
 };
 
@@ -122,10 +126,15 @@ QVariant MoveListModel::data(const QModelIndex &idx, int role) const {
     QUuid node = p->mainlineNodes[nodeIdx];
 
     if (role == NodeRole) return node;
-    if (role == DisplayRole) {
+    if (role == Qt::DisplayRole) {
         auto move = p->c->board().lastMove(node);
         if (!move.has_value()) return {};
         return move->toString();
+    }
+    if (role == VariationsRole) {
+        auto variations = p->c->board().siblings(node);
+        if (variations.empty()) return {};
+        return QVariant::fromValue(variations);
     }
 
     return {};
@@ -135,7 +144,7 @@ QHash<int, QByteArray> MoveListModel::roleNames() const {
     QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
 
     roles[NodeRole] = "node";
-    roles[DisplayRole] = "move";
+    roles[VariationsRole] = "variations";
 
     return roles;
 }

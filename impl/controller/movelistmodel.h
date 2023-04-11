@@ -18,7 +18,7 @@ Q_OBJECT
 public:
     enum ItemRoles {
         NodeRole = Qt::UserRole + 1,
-        DisplayRole,
+        VariationsRole,
     };
 
     explicit MoveListModel(QObject *parent = nullptr);

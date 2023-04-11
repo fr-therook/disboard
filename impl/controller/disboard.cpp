@@ -112,6 +112,15 @@ std::optional<QUuid> Disboard::nextMainlineNode(QUuid node) const {
     return from_uuid(tree->next_mainline_node(from_quuid(node)));
 }
 
+QVector<QUuid> Disboard::siblings(QUuid node) const {
+    auto node_vec = tree->siblings(from_quuid(node));
+    QVector<QUuid> nodes;
+    for (auto _node : node_vec) {
+        nodes.push_back(from_uuid(_node));
+    }
+    return nodes;
+}
+
 QVector<QUuid> Disboard::mainlineNodes(QUuid node) const {
     auto node_vec = tree->mainline_nodes(from_quuid(node));
     QVector<QUuid> nodes;

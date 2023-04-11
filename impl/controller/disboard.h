@@ -30,6 +30,7 @@ namespace disboard {
         std::optional<QUuid> prevNode(QUuid node) const;
         std::optional<QUuid> nextMainlineNode(QUuid node) const;
 
+        QVector<QUuid> siblings(QUuid node) const;
         QVector<QUuid> mainlineNodes(QUuid node) const;
 
         QUuid addNode(QUuid node, Move move);

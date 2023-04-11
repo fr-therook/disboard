@@ -27,6 +27,7 @@ mod ffi {
         pub color: Color,
         pub role: Role,
     }
+
     extern "Rust" {
         fn piece_default() -> Piece;
     }
@@ -88,6 +89,8 @@ mod ffi {
         fn has_next_mainline_node(&self, node: Uuid) -> bool;
         fn next_mainline_node(&self, node: Uuid) -> Uuid;
 
+        fn variations(&self, node: Uuid) -> Vec<Uuid>;
+        fn siblings(&self, node: Uuid) -> Vec<Uuid>;
         fn mainline_nodes(&self, node: Uuid) -> Vec<Uuid>;
 
         fn add_node(&mut self, node: Uuid, m: Box<Move>) -> Uuid;
@@ -179,7 +182,7 @@ fn square_default() -> ffi::Square {
 fn square_from_coords(file: u8, rank: u8) -> ffi::Square {
     let sq = sac::Square::from_coords(
         sac::File::new(file as u32),
-        sac::Rank::new(rank as u32)
+        sac::Rank::new(rank as u32),
     );
     ffi::Square {
         index: u8::from(sq),
@@ -324,7 +327,7 @@ impl CurPosition {
                 }
             );
         let san = sac::SanPlus::from_move(self.0.clone(), &legal_move);
-        Box::new(Move{
+        Box::new(Move {
             inner: legal_move,
             san,
         })
@@ -487,6 +490,27 @@ impl GameTree {
         self.inner.mainline(node.into())
             .unwrap_or_default()
             .into()
+    }
+
+    fn variations(&self, node: ffi::Uuid) -> Vec<ffi::Uuid> {
+        let node: uuid::Uuid = node.into();
+        let variation_vec = self.inner.other_variations(node);
+        println!("variations for {:?}: {:?}", node, variation_vec);
+
+        variation_vec
+            .into_iter()
+            .map(|val| val.into())
+            .collect::<Vec<ffi::Uuid>>()
+    }
+
+    fn siblings(&self, node: ffi::Uuid) -> Vec<ffi::Uuid> {
+        let node: uuid::Uuid = node.into();
+        let sibling_vec = self.inner.siblings(node);
+
+        sibling_vec
+            .into_iter()
+            .map(|val| val.into())
+            .collect::<Vec<ffi::Uuid>>()
     }
 
     fn mainline_nodes(&self, node: ffi::Uuid) -> Vec<ffi::Uuid> {
