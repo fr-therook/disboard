@@ -9,7 +9,7 @@ crate-type = ["staticlib"]
 [dependencies]
 cxx = "1.0"
 
-sac = { package = "sacrifice", version = "0.1.9"}
+sac = { package = "sacrifice", version = "0.1.10"}
 
 [dependencies.uuid]
 version = "1.3"

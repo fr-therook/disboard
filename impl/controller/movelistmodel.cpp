@@ -3,13 +3,13 @@
 class MoveListModel::p {
     friend MoveListModel;
 public:
-    p(Controller* c, QUuid root, MoveListModel *q)
-        : c(c), root(root), q(q),
-            mainlineNodes(c->board().mainlineNodes(root)) {}
+    p(Controller *c, QUuid root, MoveListModel *q)
+            : c(c), root(root), q(q),
+              mainlineNodes(c->board().mainlineNodes(root)) {}
 
 private:
     MoveListModel *q;
-    Controller* c;
+    Controller *c;
     QUuid root;
 
     QVector<QUuid> mainlineNodes;
@@ -25,18 +25,25 @@ private:
         return (idx + 1) / 2;
     }
 
-    int rowToIdx(int row) const {
+    int idxToCol(int idx) const {
         if (rootTurn() == disboard::Color::White) {
-            return row * 2;
+            return idx % 2;
         }
-        return row * 2 - 1;
+        return (idx + 1) % 2;
+    }
+
+    int modelIdxToIdx(const QModelIndex &idx) const {
+        if (rootTurn() == disboard::Color::White) {
+            return idx.row() * 2 + idx.column();
+        }
+        return idx.row() * 2 + idx.column() - 1;
     }
 
     void addNode(QUuid node) {
-        qDebug() << "root:" << root << "node:" << node;
-
         QUuid curNode = node;
         QVector<QUuid> prevNodes;
+
+        // Iterate parents of node until root (excluding)
         while (true) {
             auto prevNode = c->board().prevNode(curNode);
             if (!prevNode.has_value()) break;
@@ -44,8 +51,7 @@ private:
             if (curNode == root) break;
             prevNodes.push_front(curNode);
         }
-        qDebug() << "prev:" << prevNodes;
-        qDebug() << "main:" << mainlineNodes;
+
         if (curNode != root) return; // In another tree?
 
         if (prevNodes.empty()) { // first move?
@@ -69,16 +75,18 @@ private:
             if (mainlineNodes.count() <= prevNodes.count()) {
                 // added node is new mainline variation
                 Q_ASSERT(prevNodes.count() == mainlineNodes.count());
+                auto oldRow = idxToRow(mainlineNodes.count() - 1);
                 auto newRow = idxToRow(mainlineNodes.count());
-                if (newRow == idxToRow(mainlineNodes.count() - 1)) {
-                    auto newQIdx = q->index(newRow);
+                if (oldRow == newRow) {
+                    auto topLeft = q->index(oldRow, 0);
+                    auto bottomRight = q->index(newRow, 1);
                     mainlineNodes.push_back(node);
-                    emit q->dataChanged(newQIdx, newQIdx, {WhiteMoveRole, BlackMoveRole});
+                    emit q->dataChanged(topLeft, bottomRight, {NodeRole, DisplayRole});
                     return;
                 }
 
                 // Insert new row
-                q->beginInsertRows({}, newRow, newRow);
+                q->beginInsertRows({}, oldRow, oldRow);
                 mainlineNodes.push_back(node);
                 q->endInsertRows();
 
@@ -92,7 +100,7 @@ private:
 };
 
 MoveListModel::MoveListModel(QObject *parent)
-        : QAbstractListModel(parent), p(nullptr) {}
+        : QAbstractTableModel(parent), p(nullptr) {}
 
 int MoveListModel::rowCount(const QModelIndex &parent) const {
     if (!p) return 0; // default
@@ -100,34 +108,34 @@ int MoveListModel::rowCount(const QModelIndex &parent) const {
     return p->idxToRow(p->mainlineNodes.count() - 1) + 1;
 }
 
-QVariant MoveListModel::data(const QModelIndex &index, int role) const {
+int MoveListModel::columnCount(const QModelIndex &parent) const {
+    return 2;
+}
+
+QVariant MoveListModel::data(const QModelIndex &idx, int role) const {
     if (!p) return {}; // default
-    if (index.row() >= rowCount()) return {};
-    int idx = p->rowToIdx(index.row());
+    if (!idx.isValid()) return {};
 
-    if (role == WhiteMoveRole) {
-        if (idx < 0) return {};
-        auto whiteNode = p->mainlineNodes[idx];
-        auto whiteMove = p->c->board().lastMove(whiteNode);
-        if (!whiteMove.has_value()) return {};
-        return whiteMove->toString();
+    auto nodeIdx = p->modelIdxToIdx(idx);
+    if (nodeIdx < 0 || nodeIdx >= p->mainlineNodes.count()) return {};
+
+    QUuid node = p->mainlineNodes[nodeIdx];
+
+    if (role == NodeRole) return node;
+    if (role == DisplayRole) {
+        auto move = p->c->board().lastMove(node);
+        if (!move.has_value()) return {};
+        return move->toString();
     }
 
-    if (role == BlackMoveRole) {
-        if (idx >= p->mainlineNodes.count() - 1) return {};
-        auto blackNode = p->mainlineNodes[idx + 1];
-        auto blackMove = p->c->board().lastMove(blackNode);
-        if (!blackMove.has_value()) return {};
-        return blackMove->toString();
-    }
     return {};
 }
 
 QHash<int, QByteArray> MoveListModel::roleNames() const {
     QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
 
-    roles[WhiteMoveRole] = "whiteMove";
-    roles[BlackMoveRole] = "blackMove";
+    roles[NodeRole] = "node";
+    roles[DisplayRole] = "move";
 
     return roles;
 }
@@ -157,7 +165,7 @@ void MoveListModel::setRoot(QUuid newValue) {
     emit rootChanged();
 }
 
-void MoveListModel::reset(Controller* newC, QUuid newR) {
+void MoveListModel::reset(Controller *newC, QUuid newR) {
     beginResetModel();
     {
         if (p) {
@@ -166,7 +174,7 @@ void MoveListModel::reset(Controller* newC, QUuid newR) {
             p.reset();
         }
         connect(newC, &Controller::nodePushed,
-                this,&MoveListModel::handleNodePushed);
+                this, &MoveListModel::handleNodePushed);
         p = std::make_shared<class MoveListModel::p>(newC, newR, this);
     }
     endResetModel();

@@ -16,9 +16,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "bitflags"
-version = "1.3.2"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
+checksum = "c70beb79cbb5ce9c4f8e20849978f34225931f665bb49efa6982875a4d5facb3"
 
 [[package]]
 name = "btoi"
@@ -160,9 +160,9 @@ checksum = "b7e5500299e16ebb147ae15a00a942af264cf3688f47923b8fc2cd5858f23ad3"
 
 [[package]]
 name = "pgn-reader"
-version = "0.22.0"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0ea9e1794721ebed88288068e05dc39a938ebe37f5e0eb7200d88e4eb27f5c3"
+checksum = "18ea423ba0ed6fa1fa0f77eee3300f03db531d9613e92d51e508b7a7e74fd8c5"
 dependencies = [
  "btoi",
  "circular",
@@ -226,9 +226,9 @@ dependencies = [
 
 [[package]]
 name = "sacrifice"
-version = "0.1.9"
+version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edb67caa6a993e942aafdd44001a972e67b4fdaaec9a14058839b6edfb72b600"
+checksum = "b3a25ec187cd7b7e75a39cbb6a60f53baf154711614753bc9e8b1134dc4d58fa"
 dependencies = [
  "pgn-reader",
  "shakmaty",
@@ -243,9 +243,9 @@ checksum = "1792db035ce95be60c3f8853017b3999209281c24e2ba5bc8e59bf97a0c590c1"
 
 [[package]]
 name = "shakmaty"
-version = "0.23.1"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "295e81aa6fa93e4ee73fc6ef8242a6a10dcb4194386a3c3c7a54622d543f429f"
+checksum = "0c33e607765c35af0c83c983329d81e63328c5c513edee58698f85744364f9aa"
 dependencies = [
  "arrayvec",
  "bitflags",

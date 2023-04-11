@@ -21,47 +21,27 @@ Window {
             id: board
         }
 
-        ListView {
+        TableView {
             Layout.fillWidth: true
             Layout.fillHeight: true
+
+            id: tableView
 
             model: MoveListModel {
                 controller: board.controller
             }
 
-            delegate: Rectangle {
-                width: parent.width
-                height: 32
+            rowHeightProvider: function(row) {
+                return 48;
+            }
+            columnWidthProvider: function(col) {
+                return width / 2;
+            }
 
-                color: index % 2 ? "#ebebeb" : "#fafafa"
+            delegate: ItemDelegate {
+                visible: model.node != null
 
-                RowLayout {
-                    anchors.fill: parent
-
-                    Control {
-                        Layout.preferredWidth: parent.width / 2
-                        Layout.fillHeight: true
-
-                        visible: model.whiteMove != null
-                        padding: 4
-
-                        contentItem: Text {
-                            text: model.whiteMove != null ? model.whiteMove : ""
-                        }
-                    }
-
-                    Control {
-                        Layout.preferredWidth: parent.width / 2
-                        Layout.fillHeight: true
-
-                        visible: model.blackMove  != null
-                        padding: 4
-
-                        contentItem: Text {
-                            text: model.blackMove != null ? model.blackMove : ""
-                        }
-                    }
-                }
+                text: model.node != null ? model.move : ""
             }
         }
     }

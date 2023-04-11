@@ -7,7 +7,7 @@
 
 #include "controller.h"
 
-class MoveListModel : public QAbstractListModel {
+class MoveListModel : public QAbstractTableModel {
 Q_OBJECT
 
     QML_ELEMENT
@@ -17,12 +17,14 @@ Q_OBJECT
     Q_PROPERTY(QUuid root READ root WRITE setRoot NOTIFY rootChanged)
 public:
     enum ItemRoles {
-        WhiteMoveRole = Qt::UserRole + 1, BlackMoveRole
+        NodeRole = Qt::UserRole + 1,
+        DisplayRole,
     };
 
     explicit MoveListModel(QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     QHash<int, QByteArray> roleNames() const override;
 

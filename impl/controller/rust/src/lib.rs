@@ -460,7 +460,7 @@ impl GameTree {
                 to: sac::Square::A1,
             });
         let pos = self.inner
-            .board_at(node)
+            .board_before(node)
             .expect("invalid node");
         let san = sac::SanPlus::from_move(pos, &m);
 
