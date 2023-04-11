@@ -8,6 +8,7 @@ Item {
     required property int pieceSize
 
     property alias pgn: boardCon.pgn
+    readonly property alias controller: boardCon
 
     id: board
 

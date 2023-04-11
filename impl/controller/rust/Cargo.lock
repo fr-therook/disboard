@@ -226,9 +226,9 @@ dependencies = [
 
 [[package]]
 name = "sacrifice"
-version = "0.1.8"
+version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2bb2c8613d67b3434a849b0e03688587218c4e7d0f0ac78e75f35ae532fee13"
+checksum = "edb67caa6a993e942aafdd44001a972e67b4fdaaec9a14058839b6edfb72b600"
 dependencies = [
  "pgn-reader",
  "shakmaty",

@@ -5,9 +5,7 @@ Item {
     required property int sourceSize
 
     QtObject {
-        readonly property string uriName: piece ? piece.pieceStr : "bN"
-
-        readonly property string pieceUri: "qrc:/chess/pieces/" + uriName + ".svg"
+        readonly property string pieceUri: piece ? ("qrc:/chess/pieces/" + piece.pieceStr + ".svg") : ""
 
         id: inner
     }

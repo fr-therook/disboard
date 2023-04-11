@@ -16,6 +16,8 @@ Q_OBJECT
     Q_DISABLE_COPY(Controller)
 
     Q_PROPERTY(int pieceSize READ pieceSize WRITE setPieceSize NOTIFY pieceSizeChanged)
+
+    Q_PROPERTY(QUuid root READ root NOTIFY rootChanged)
     Q_PROPERTY(QUuid curNode READ curNode WRITE setCurNode NOTIFY curNodeChanged)
 
     Q_PROPERTY(QVariant phantom READ phantom NOTIFY dragChanged)
@@ -58,34 +60,34 @@ public:
     Q_INVOKABLE
     void promote(disboard::Piece piece);
 
-    Q_INVOKABLE
-    void prevMove();
+    Q_INVOKABLE void prevMove();
+    Q_INVOKABLE void nextMove();
 
-    Q_INVOKABLE
-    void nextMove();
-
-    int pieceSize();
+    int pieceSize() const;
     void setPieceSize(int newValue);
 
-    QUuid curNode();
+    QUuid root() const;
+    QUuid curNode() const;
     void setCurNode(QUuid newValue);
 
-    QVariant phantom();
-    QPointF dragPos();
+    QVariant phantom() const;
+    QPointF dragPos() const;
     void setDragPos(QPointF newValue);
-    disboard::Square dragSq();
+    disboard::Square dragSq() const;
 
-    QVariant highlightedSq();
-    QVariant lastSrcSq();
-    QVariant lastDestSq();
+    QVariant highlightedSq() const;
+    QVariant lastSrcSq() const;
+    QVariant lastDestSq() const;
 
-    QVector<disboard::Square> hintSq();
-    QVector<disboard::Square> captureSq();
+    QVector<disboard::Square> hintSq() const;
+    QVector<disboard::Square> captureSq() const;
 
-    QVariant promotionSq();
-    QVariant promotionPieces();
+    QVariant promotionSq() const;
+    QVariant promotionPieces() const;
 
-    QString pgn();
+    QString pgn() const;
+
+    const disboard::Disboard& board() const;
 
 private:
     class p;
@@ -103,7 +105,10 @@ signals:
     );
 
     void pieceSizeChanged();
+
+    void rootChanged();
     void curNodeChanged();
+    void nodePushed(QUuid node);
     void treeChanged();
 
     void dragChanged();

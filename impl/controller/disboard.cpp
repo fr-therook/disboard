@@ -31,6 +31,10 @@ QUuid Disboard::root() const {
     return from_uuid(tree->root());
 }
 
+Color Disboard::turn(QUuid node) const {
+    return tree->position(from_quuid(node))->turn();
+}
+
 std::tuple<QVector<Square>, QVector<Piece>>
 Disboard::pieces(QUuid node) const {
     auto position = tree->position(from_quuid(node));
@@ -106,6 +110,15 @@ std::optional<QUuid> Disboard::prevNode(QUuid node) const {
 std::optional<QUuid> Disboard::nextMainlineNode(QUuid node) const {
     if (!tree->has_next_mainline_node(from_quuid(node))) return {};
     return from_uuid(tree->next_mainline_node(from_quuid(node)));
+}
+
+QVector<QUuid> Disboard::mainlineNodes(QUuid node) const {
+    auto node_vec = tree->mainline_nodes(from_quuid(node));
+    QVector<QUuid> nodes;
+    for (auto _node : node_vec) {
+        nodes.push_back(from_uuid(_node));
+    }
+    return nodes;
 }
 
 QUuid Disboard::addNode(QUuid node, Move move) {

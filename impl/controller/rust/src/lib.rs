@@ -54,6 +54,7 @@ mod ffi {
         fn is_castle(&self) -> bool;
         fn castle_rook_from(&self) -> Square;
         fn castle_rook_to(&self) -> Square;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
@@ -86,6 +87,8 @@ mod ffi {
         fn prev_node(&self, node: Uuid) -> Uuid;
         fn has_next_mainline_node(&self, node: Uuid) -> bool;
         fn next_mainline_node(&self, node: Uuid) -> Uuid;
+
+        fn mainline_nodes(&self, node: Uuid) -> Vec<Uuid>;
 
         fn add_node(&mut self, node: Uuid, m: Box<Move>) -> Uuid;
 
@@ -192,54 +195,60 @@ impl ffi::Square {
     }
 }
 
-struct Move(sac::Move);
+struct Move {
+    inner: sac::Move,
+    san: sac::SanPlus,
+}
 
 impl Move {
     fn clone(&self) -> Box<Move> {
-        Box::new(Move(self.0.clone()))
+        Box::new(Move {
+            inner: self.inner.clone(),
+            san: self.san.clone(),
+        })
     }
 
     fn from(&self) -> ffi::Square {
-        self.0.from()
+        self.inner.from()
             .expect("a chess move always comes from somewhere")
             .into()
     }
 
     fn to(&self) -> ffi::Square {
-        if let sac::Move::Castle { king: _, rook: _ } = self.0 {
+        if let sac::Move::Castle { king: _, rook: _ } = self.inner {
             // Treat castling as special case
-            let castling_side = self.0.castling_side().unwrap();
+            let castling_side = self.inner.castling_side().unwrap();
 
-            let to_rank = self.0.from().unwrap().rank();
+            let to_rank = self.inner.from().unwrap().rank();
             let to_file = castling_side.king_to_file();
 
             let dest_sq = sac::Square::from_coords(to_file, to_rank);
             return dest_sq.into();
         }
 
-        self.0.to().into()
+        self.inner.to().into()
     }
 
     fn is_promotion(&self) -> bool {
-        self.0.is_promotion()
+        self.inner.is_promotion()
     }
 
     fn set_promotion(&mut self, role: ffi::Role) {
-        if let sac::Move::Normal { ref mut promotion, .. } = self.0 {
+        if let sac::Move::Normal { ref mut promotion, .. } = self.inner {
             *promotion = Some(role.into());
         }
     }
 
     fn is_en_passant(&self) -> bool {
-        self.0.is_en_passant()
+        self.inner.is_en_passant()
     }
 
     fn is_castle(&self) -> bool {
-        self.0.is_castle()
+        self.inner.is_castle()
     }
 
     fn castle_rook_from(&self) -> ffi::Square {
-        if let sac::Move::Castle { king: _, rook } = self.0 {
+        if let sac::Move::Castle { king: _, rook } = self.inner {
             return rook.into();
         }
 
@@ -249,9 +258,9 @@ impl Move {
     }
 
     fn castle_rook_to(&self) -> ffi::Square {
-        if self.0.is_castle() {
-            let castling_side = self.0.castling_side().unwrap();
-            let from_rank = self.0.from().unwrap().rank();
+        if self.inner.is_castle() {
+            let castling_side = self.inner.castling_side().unwrap();
+            let from_rank = self.inner.from().unwrap().rank();
             let to_file = castling_side.rook_to_file();
 
             return sac::Square::from_coords(to_file, from_rank).into();
@@ -260,6 +269,10 @@ impl Move {
         ffi::Square {
             index: 0
         }
+    }
+
+    fn to_string(&self) -> String {
+        format!("{}", self.san)
     }
 }
 
@@ -310,7 +323,11 @@ impl CurPosition {
                     to: sac::Square::A1,
                 }
             );
-        Box::new(Move(legal_move))
+        let san = sac::SanPlus::from_move(self.0.clone(), &legal_move);
+        Box::new(Move{
+            inner: legal_move,
+            san,
+        })
     }
 
     fn hints(&self, src: ffi::Square) -> Vec<ffi::Square> {
@@ -436,14 +453,22 @@ impl GameTree {
     }
 
     fn prev_move(&self, node: ffi::Uuid) -> Box<Move> {
-        let m = self.inner.prev_move(node.into())
+        let node = node.into();
+        let m = self.inner.prev_move(node)
             .unwrap_or(sac::Move::Put {
                 role: sac::Role::Pawn,
                 to: sac::Square::A1,
             });
+        let pos = self.inner
+            .board_at(node)
+            .expect("invalid node");
+        let san = sac::SanPlus::from_move(pos, &m);
 
         Box::new(
-            Move(m)
+            Move {
+                inner: m,
+                san,
+            }
         )
     }
 
@@ -464,8 +489,21 @@ impl GameTree {
             .into()
     }
 
+    fn mainline_nodes(&self, node: ffi::Uuid) -> Vec<ffi::Uuid> {
+        let mut cur_node: uuid::Uuid = node.into();
+        let mut node_vec: Vec<uuid::Uuid> = Vec::new();
+        while let Some(node) = self.inner.mainline(cur_node) {
+            node_vec.push(node);
+            cur_node = node;
+        }
+
+        node_vec.into_iter()
+            .map(|val| val.into())
+            .collect::<Vec<ffi::Uuid>>()
+    }
+
     fn add_node(&mut self, node: ffi::Uuid, m: Box<Move>) -> ffi::Uuid {
-        self.inner.add_node(node.into(), m.0)
+        self.inner.add_node(node.into(), m.inner)
             .expect("invalid node in add_node")
             .into()
     }

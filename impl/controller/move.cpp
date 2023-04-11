@@ -26,3 +26,7 @@ Square Move::castleRookFrom() const {
 Square Move::castleRookTo() const {
     return Square{impl->castle_rook_to()};
 }
+
+QString Move::toString() const {
+    return QString::fromStdString(std::string{impl->to_string()});
+}

@@ -24,6 +24,8 @@ qt_add_qml_module(libcontroller
         move.h
         disboard.cpp
         disboard.h
+        movelistmodel.cpp
+        movelistmodel.h
         controller.cpp
         controller.h
         )

@@ -174,6 +174,7 @@ private:
     void applyMove(disboard::Move m) {
         auto newNode = board.addNode(curNode, std::move(m));
         q->setCurNode(newNode);
+        emit q->nodePushed(newNode);
         emit q->treeChanged();
     }
 
@@ -246,7 +247,7 @@ void Controller::nextMove() {
     resyncBoard();
 }
 
-int Controller::pieceSize() {
+int Controller::pieceSize() const {
     return p->pieceSize;
 }
 
@@ -258,7 +259,11 @@ void Controller::setPieceSize(int newValue) {
     emit curNodeChanged();
 }
 
-QUuid Controller::curNode() {
+QUuid Controller::root() const {
+    return p->board.root();
+}
+
+QUuid Controller::curNode() const {
     return p->curNode;
 }
 
@@ -270,14 +275,14 @@ void Controller::setCurNode(QUuid newValue) {
     emit curNodeChanged();
 }
 
-QVariant Controller::promotionSq() {
+QVariant Controller::promotionSq() const {
     if (!p->promotion.has_value()) return {};
 
     auto sq = (*p->promotion).to();
     return QVariant::fromValue(sq);
 }
 
-QVariant Controller::promotionPieces() {
+QVariant Controller::promotionPieces() const {
     if (!p->promotion.has_value()) return {};
 
     auto sq = (*p->promotion).to();
@@ -305,14 +310,14 @@ QVariant Controller::promotionPieces() {
     return QVariant::fromValue(vec);
 }
 
-QVariant Controller::phantom() {
+QVariant Controller::phantom() const {
     if (!p->dragged.has_value()) return {};
 
     auto piece = p->dragged->piece;
     return QVariant::fromValue(piece);
 }
 
-QPointF Controller::dragPos() {
+QPointF Controller::dragPos() const {
     return mDragPos;
 }
 
@@ -322,7 +327,7 @@ void Controller::setDragPos(QPointF newValue) {
     emit dragPosChanged();
 }
 
-disboard::Square Controller::dragSq() {
+disboard::Square Controller::dragSq() const {
     return {
             coord_to_square(
                     mDragPos.x(), mDragPos.y(),
@@ -331,14 +336,14 @@ disboard::Square Controller::dragSq() {
     };
 }
 
-QVariant Controller::highlightedSq() {
+QVariant Controller::highlightedSq() const {
     if (auto val = p->highlightedSq) {
         return QVariant::fromValue(*val);
     }
     return {};
 }
 
-QVariant Controller::lastSrcSq() {
+QVariant Controller::lastSrcSq() const {
     if (auto val = p->board.lastMove(curNode())) {
         return QVariant::fromValue(
                 (*val).from()
@@ -347,7 +352,7 @@ QVariant Controller::lastSrcSq() {
     return {};
 }
 
-QVariant Controller::lastDestSq() {
+QVariant Controller::lastDestSq() const {
     if (auto val = p->board.lastMove(curNode())) {
         return QVariant::fromValue(
                 (*val).to()
@@ -356,7 +361,7 @@ QVariant Controller::lastDestSq() {
     return {};
 }
 
-QVector<disboard::Square> Controller::hintSq() {
+QVector<disboard::Square> Controller::hintSq() const {
     if (auto _highlightSq = p->highlightedSq) {
         const auto [hints, _] = p->board.hints(curNode(), *_highlightSq);
         return hints;
@@ -364,7 +369,7 @@ QVector<disboard::Square> Controller::hintSq() {
     return {};
 }
 
-QVector<disboard::Square> Controller::captureSq() {
+QVector<disboard::Square> Controller::captureSq() const {
     if (auto _highlightSq = p->highlightedSq) {
         const auto [_, captures] = p->board.hints(curNode(), *_highlightSq);
         return captures;
@@ -372,6 +377,10 @@ QVector<disboard::Square> Controller::captureSq() {
     return {};
 }
 
-QString Controller::pgn() {
+QString Controller::pgn() const {
     return p->board.pgn();
+}
+
+const disboard::Disboard& Controller::board() const {
+    return p->board;
 }

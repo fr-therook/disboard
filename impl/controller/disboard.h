@@ -16,6 +16,8 @@ namespace disboard {
 
         QUuid root() const;
 
+        Color turn(QUuid node) const;
+
         std::tuple<QVector<Square>, QVector<Piece>> pieces(QUuid node) const;
         std::optional<Piece> pieceAt(QUuid node, Square square) const;
         std::optional<Move> legalMove(QUuid node, Square from, Square to) const;
@@ -27,6 +29,8 @@ namespace disboard {
 
         std::optional<QUuid> prevNode(QUuid node) const;
         std::optional<QUuid> nextMainlineNode(QUuid node) const;
+
+        QVector<QUuid> mainlineNodes(QUuid node) const;
 
         QUuid addNode(QUuid node, Move move);
 

@@ -3,6 +3,7 @@ import QtQuick
 import disboard.impl
 
 Item {
+    readonly property alias controller: boardImpl.controller
     readonly property alias pgn: boardImpl.pgn
 
     BoardImpl {

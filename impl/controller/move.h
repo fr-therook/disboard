@@ -31,6 +31,8 @@ namespace disboard {
         Square castleRookFrom() const;
         Square castleRookTo() const;
 
+        QString toString() const;
+
     friend class Disboard;
 
     private:
