@@ -63,31 +63,31 @@ public:
     Q_INVOKABLE void prevMove();
     Q_INVOKABLE void nextMove();
 
-    int pieceSize() const;
+    [[nodiscard]] int pieceSize() const;
     void setPieceSize(int newValue);
 
-    QUuid root() const;
-    QUuid curNode() const;
+    [[nodiscard]] QUuid root() const;
+    [[nodiscard]] QUuid curNode() const;
     void setCurNode(QUuid newValue);
 
-    QVariant phantom() const;
-    QPointF dragPos() const;
+    [[nodiscard]] QVariant phantom() const;
+    [[nodiscard]] QPointF dragPos() const;
     void setDragPos(QPointF newValue);
-    disboard::Square dragSq() const;
+    [[nodiscard]] disboard::Square dragSq() const;
 
-    QVariant highlightedSq() const;
-    QVariant lastSrcSq() const;
-    QVariant lastDestSq() const;
+    [[nodiscard]] QVariant highlightedSq() const;
+    [[nodiscard]] QVariant lastSrcSq() const;
+    [[nodiscard]] QVariant lastDestSq() const;
 
-    QVector<disboard::Square> hintSq() const;
-    QVector<disboard::Square> captureSq() const;
+    [[nodiscard]] QVector<disboard::Square> hintSq() const;
+    [[nodiscard]] QVector<disboard::Square> captureSq() const;
 
-    QVariant promotionSq() const;
-    QVariant promotionPieces() const;
+    [[nodiscard]] QVariant promotionSq() const;
+    [[nodiscard]] QVariant promotionPieces() const;
 
-    QString pgn() const;
+    [[nodiscard]] QString pgn() const;
 
-    const disboard::Disboard& board() const;
+    [[nodiscard]] const disboard::Disboard& board() const;
 
 private:
     class p;

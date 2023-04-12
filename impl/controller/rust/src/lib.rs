@@ -118,11 +118,11 @@ impl Into<uuid::Uuid> for ffi::Uuid {
 
 macro_rules! convert_enum {
     ($src: ty, $dst: ty, $($variant: ident,)+) => {
-        impl Into<$dst> for $src {
-            fn into(self) -> $dst {
-                match self {
-                    $(Self::$variant => <$dst>::$variant,)*
-                    _ => panic!(),
+        impl From<$src> for $dst {
+            fn from(value: $src) -> $dst {
+                match value {
+                    $(<$src>::$variant => <$dst>::$variant,)*
+                    _ => unreachable!(),
                 }
             }
         }
@@ -153,11 +153,11 @@ convert_enum!(
     King,
 );
 
-impl Into<ffi::Piece> for sac::Piece {
-    fn into(self) -> ffi::Piece {
+impl From<sac::Piece> for ffi::Piece {
+    fn from(value: sac::Piece) -> ffi::Piece {
         ffi::Piece {
-            color: self.color.into(),
-            role: self.role.into(),
+            color: value.color.into(),
+            role: value.role.into(),
         }
     }
 }
@@ -169,17 +169,17 @@ fn piece_default() -> ffi::Piece {
     }
 }
 
-impl Into<ffi::Square> for sac::Square {
-    fn into(self) -> ffi::Square {
+impl From<sac::Square> for ffi::Square {
+    fn from(value: sac::Square) -> ffi::Square {
         ffi::Square {
-            index: u8::from(self),
+            index: u8::from(value),
         }
     }
 }
 
-impl Into<sac::Square> for ffi::Square {
-    fn into(self) -> sac::Square {
-        sac::Square::new(self.index as u32)
+impl From<ffi::Square> for sac::Square {
+    fn from(value: ffi::Square) -> sac::Square {
+        sac::Square::new(value.index as u32)
     }
 }
 

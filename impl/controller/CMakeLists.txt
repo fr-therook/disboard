@@ -17,6 +17,7 @@ qt_add_qml_module(libcontroller
         VERSION 1.0
         RESOURCE_PREFIX /imports
         SOURCES
+        square.cpp
         square.h
         piece.cpp
         piece.h

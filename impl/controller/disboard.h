@@ -14,28 +14,28 @@ namespace disboard {
     public:
         Disboard();
 
-        QUuid root() const;
+        [[nodiscard]] QUuid root() const;
 
-        Color turn(QUuid node) const;
+        [[nodiscard]] Color turn(QUuid node) const;
 
-        std::tuple<QVector<Square>, QVector<Piece>> pieces(QUuid node) const;
-        std::optional<Piece> pieceAt(QUuid node, Square square) const;
-        std::optional<Move> legalMove(QUuid node, Square from, Square to) const;
+        [[nodiscard]] std::tuple<QVector<Square>, QVector<Piece>> pieces(QUuid node) const;
+        [[nodiscard]] std::optional<Piece> pieceAt(QUuid node, Square square) const;
+        [[nodiscard]] std::optional<Move> legalMove(QUuid node, Square from, Square to) const;
 
-        std::optional<Move> lastMove(QUuid node) const;
+        [[nodiscard]] std::optional<Move> lastMove(QUuid node) const;
 
-        std::tuple<QVector<Square>, QVector<Square>>
+        [[nodiscard]] std::tuple<QVector<Square>, QVector<Square>>
             hints(QUuid node, Square from) const;
 
-        std::optional<QUuid> prevNode(QUuid node) const;
-        std::optional<QUuid> nextMainlineNode(QUuid node) const;
+        [[nodiscard]] std::optional<QUuid> prevNode(QUuid node) const;
+        [[nodiscard]] std::optional<QUuid> nextMainlineNode(QUuid node) const;
 
-        QVector<QUuid> siblings(QUuid node) const;
-        QVector<QUuid> mainlineNodes(QUuid node) const;
+        [[nodiscard]] QVector<QUuid> siblings(QUuid node) const;
+        [[nodiscard]] QVector<QUuid> mainlineNodes(QUuid node) const;
 
         QUuid addNode(QUuid node, Move move);
 
-        QString pgn() const;
+        [[nodiscard]] QString pgn() const;
 
     private:
         rust::Box<librustdisboard::GameTree> tree;

@@ -13,12 +13,11 @@ disboard::Square coord_to_square(float x, float y, int piece_size) {
 class Controller::p {
     friend Controller;
 public:
-    p(Controller *q) : q(q), board({}), curNode(board.root()) {}
+    explicit p(Controller *q)
+        : q(q), board({}), curNode(board.root()), pieceSize(0) {}
 
     void resync() {
-        QVector<disboard::Square> squares;
-        QVector<disboard::Piece> pieces;
-        std::tie(squares, pieces) = board.pieces(curNode);
+        const auto [squares, pieces] = board.pieces(curNode);
         emit q->resetBoard(squares, pieces);
     }
 
@@ -39,7 +38,7 @@ public:
                 // A legal move!
                 emit q->movePiece(srcSq, sq);
 
-                tryApplyMove(std::move(*m));
+                tryApplyMove(*m);
                 return;
             }
         }
@@ -94,7 +93,7 @@ public:
 
         emit q->placePiece(piece, destSq);
 
-        tryApplyMove(std::move(*m));
+        tryApplyMove(*m);
     }
 
     void promote(disboard::Piece piece) {
@@ -123,7 +122,7 @@ public:
 
         emit q->placePiece(piece, (*_promotion).to());
 
-        applyMove(std::move(*_promotion));
+        applyMove(*_promotion);
     }
 
 private:
@@ -145,11 +144,9 @@ private:
     std::optional<DraggedPiece> dragged;
     std::optional<disboard::Move> promotion;
 
-    void tryApplyMove(disboard::Move m) {
+    void tryApplyMove(const disboard::Move& m) {
         if (m.isPromotion()) {
-            promotion.emplace(
-                    std::move(m)
-            );
+            promotion.emplace(m);
             emit q->promotionChanged();
 
             return;
@@ -168,11 +165,11 @@ private:
             );
         }
 
-        applyMove(std::move(m));
+        applyMove(m);
     }
 
-    void applyMove(disboard::Move m) {
-        auto newNode = board.addNode(curNode, std::move(m));
+    void applyMove(const disboard::Move& m) {
+        auto newNode = board.addNode(curNode, m);
         setCurNode(newNode);
         emit q->nodePushed(newNode);
         emit q->treeChanged();

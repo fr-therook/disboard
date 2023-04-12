@@ -16,25 +16,25 @@ private:
 
     QVector<QUuid> mainlineNodes;
 
-    disboard::Color rootTurn() const {
+    [[nodiscard]] disboard::Color rootTurn() const {
         return c->board().turn(root);
     }
 
-    int idxToRow(int idx) const {
+    [[nodiscard]] int idxToRow(int idx) const {
         if (rootTurn() == disboard::Color::White) {
             return idx / 2;
         }
         return (idx + 1) / 2;
     }
 
-    int idxToCol(int idx) const {
+    [[nodiscard]] int idxToCol(int idx) const {
         if (rootTurn() == disboard::Color::White) {
             return idx % 2;
         }
         return (idx + 1) % 2;
     }
 
-    int modelIdxToIdx(const QModelIndex &idx) const {
+    [[nodiscard]] int modelIdxToIdx(const QModelIndex &idx) const {
         if (rootTurn() == disboard::Color::White) {
             return idx.row() * 2 + idx.column();
         }
@@ -58,17 +58,18 @@ private:
 
         if (prevNodes.empty()) { // first move?
             if (!mainlineNodes.empty()) { // variation of the first move
-                // TODO: signal change of first item
-                return;
+                auto qIdx = q->index(idxToRow(0), idxToCol(0));
+                emit q->dataChanged(qIdx, qIdx, {VariationsRole});
+            } else {
+                q->beginInsertRows({}, 0, 0);
+                mainlineNodes.push_back(node);
+                q->endInsertRows();
             }
-            q->beginInsertRows({}, 0, 0);
-            mainlineNodes.push_back(node);
-            q->endInsertRows();
             return;
         }
 
         int overlap = std::min(mainlineNodes.count(), prevNodes.count());
-        int idx = 0;
+        int idx;
         for (idx = 0; idx < overlap; idx += 1) {
             if (mainlineNodes[idx] != prevNodes[idx]) break;
         }

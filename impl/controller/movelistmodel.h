@@ -39,15 +39,15 @@ public:
 
     explicit MoveListModel(QObject *parent = nullptr);
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex &index, int role) const override;
-    QHash<int, QByteArray> roleNames() const override;
+    [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
+    [[nodiscard]] int columnCount(const QModelIndex &parent) const override;
+    [[nodiscard]] QVariant data(const QModelIndex &index, int role) const override;
+    [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
-    Controller *controller() const;
+    [[nodiscard]] Controller *controller() const;
     void setController(Controller *newValue);
 
-    QUuid root() const;
+    [[nodiscard]] QUuid root() const;
     void setRoot(QUuid newValue);
 
 private:

@@ -19,19 +19,19 @@ namespace disboard {
         Move(const Move& rhs);
         Move& operator=(const Move& rhs);
 
-        Square from() const;
-        Square to() const;
+        [[nodiscard]] Square from() const;
+        [[nodiscard]] Square to() const;
 
-        bool isPromotion() const;
+        [[nodiscard]] bool isPromotion() const;
         void setPromotion(Role role);
 
-        bool isEnPassant() const;
+        [[nodiscard]] bool isEnPassant() const;
 
-        bool isCastle() const;
-        Square castleRookFrom() const;
-        Square castleRookTo() const;
+        [[nodiscard]] bool isCastle() const;
+        [[nodiscard]] Square castleRookFrom() const;
+        [[nodiscard]] Square castleRookTo() const;
 
-        QString toString() const;
+        [[nodiscard]] QString toString() const;
 
     friend class Disboard;
 

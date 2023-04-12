@@ -23,17 +23,17 @@ namespace disboard {
         Piece(Color color, Role role);
         Piece();
 
-        Color color() const;
-        Role role() const;
+        [[nodiscard]] Color color() const;
+        [[nodiscard]] Role role() const;
 
-        QString roleStr() const;
-        QString pieceStr() const;
+        [[nodiscard]] QString roleStr() const;
+        [[nodiscard]] QString pieceStr() const;
 
         friend class Disboard;
 
     private:
         explicit Piece(librustdisboard::Piece piece)
-            : impl(std::move(piece)) {}
+            : impl(piece) {}
 
         librustdisboard::Piece impl;
     };
