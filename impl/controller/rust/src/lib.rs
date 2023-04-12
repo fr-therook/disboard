@@ -1,4 +1,4 @@
-use sac::{Position};
+use sac::Position;
 
 #[cxx::bridge(namespace = "librustdisboard")]
 mod ffi {
@@ -112,9 +112,7 @@ impl Into<ffi::Uuid> for uuid::Uuid {
 
 impl Into<uuid::Uuid> for ffi::Uuid {
     fn into(self) -> uuid::Uuid {
-        uuid::Uuid::from_fields(
-            self.l, self.w1, self.w2, &self.b,
-        )
+        uuid::Uuid::from_fields(self.l, self.w1, self.w2, &self.b)
     }
 }
 
@@ -131,16 +129,28 @@ macro_rules! convert_enum {
     }
 }
 
+convert_enum!(sac::Color, ffi::Color, Black, White,);
+
 convert_enum!(
-    sac::Color, ffi::Color, Black, White,
+    sac::Role,
+    ffi::Role,
+    Pawn,
+    Knight,
+    Bishop,
+    Rook,
+    Queen,
+    King,
 );
 
 convert_enum!(
-    sac::Role, ffi::Role, Pawn, Knight, Bishop, Rook, Queen, King,
-);
-
-convert_enum!(
-    ffi::Role, sac::Role, Pawn, Knight, Bishop, Rook, Queen, King,
+    ffi::Role,
+    sac::Role,
+    Pawn,
+    Knight,
+    Bishop,
+    Rook,
+    Queen,
+    King,
 );
 
 impl Into<ffi::Piece> for sac::Piece {
@@ -162,7 +172,7 @@ fn piece_default() -> ffi::Piece {
 impl Into<ffi::Square> for sac::Square {
     fn into(self) -> ffi::Square {
         ffi::Square {
-            index: u8::from(self)
+            index: u8::from(self),
         }
     }
 }
@@ -174,16 +184,11 @@ impl Into<sac::Square> for ffi::Square {
 }
 
 fn square_default() -> ffi::Square {
-    ffi::Square {
-        index: 0
-    }
+    ffi::Square { index: 0 }
 }
 
 fn square_from_coords(file: u8, rank: u8) -> ffi::Square {
-    let sq = sac::Square::from_coords(
-        sac::File::new(file as u32),
-        sac::Rank::new(rank as u32),
-    );
+    let sq = sac::Square::from_coords(sac::File::new(file as u32), sac::Rank::new(rank as u32));
     ffi::Square {
         index: u8::from(sq),
     }
@@ -212,7 +217,8 @@ impl Move {
     }
 
     fn from(&self) -> ffi::Square {
-        self.inner.from()
+        self.inner
+            .from()
             .expect("a chess move always comes from somewhere")
             .into()
     }
@@ -237,7 +243,10 @@ impl Move {
     }
 
     fn set_promotion(&mut self, role: ffi::Role) {
-        if let sac::Move::Normal { ref mut promotion, .. } = self.inner {
+        if let sac::Move::Normal {
+            ref mut promotion, ..
+        } = self.inner
+        {
             *promotion = Some(role.into());
         }
     }
@@ -255,9 +264,7 @@ impl Move {
             return rook.into();
         }
 
-        ffi::Square {
-            index: 0
-        }
+        ffi::Square { index: 0 }
     }
 
     fn castle_rook_to(&self) -> ffi::Square {
@@ -269,9 +276,7 @@ impl Move {
             return sac::Square::from_coords(to_file, from_rank).into();
         }
 
-        ffi::Square {
-            index: 0
-        }
+        ffi::Square { index: 0 }
     }
 
     fn to_string(&self) -> String {
@@ -289,7 +294,8 @@ impl CurPosition {
     fn squares(&self) -> Vec<ffi::Square> {
         let board = self.0.board().clone();
 
-        board.into_iter()
+        board
+            .into_iter()
             .map(|(sq, _)| sq.into())
             .collect::<Vec<ffi::Square>>()
     }
@@ -297,7 +303,8 @@ impl CurPosition {
     fn pieces(&self) -> Vec<ffi::Piece> {
         let board = self.0.board().clone();
 
-        board.into_iter()
+        board
+            .into_iter()
             .map(|(_, p)| p.into())
             .collect::<Vec<ffi::Piece>>()
     }
@@ -309,7 +316,9 @@ impl CurPosition {
 
     fn piece_at(&self, square: ffi::Square) -> ffi::Piece {
         let square: sac::Square = square.into();
-        self.0.board().piece_at(square)
+        self.0
+            .board()
+            .piece_at(square)
             .map(|val| val.into())
             .unwrap_or(piece_default())
     }
@@ -319,13 +328,10 @@ impl CurPosition {
     }
 
     fn legal_move(&self, src: ffi::Square, dest: ffi::Square) -> Box<Move> {
-        let legal_move = self._legal_move(src, dest)
-            .unwrap_or(
-                sac::Move::Put {
-                    role: sac::Role::Pawn,
-                    to: sac::Square::A1,
-                }
-            );
+        let legal_move = self._legal_move(src, dest).unwrap_or(sac::Move::Put {
+            role: sac::Role::Pawn,
+            to: sac::Square::A1,
+        });
         let san = sac::SanPlus::from_move(self.0.clone(), &legal_move);
         Box::new(Move {
             inner: legal_move,
@@ -432,7 +438,7 @@ struct GameTree {
 
 fn game_default() -> Box<GameTree> {
     Box::new(GameTree {
-        inner: sac::Game::default()
+        inner: sac::Game::default(),
     })
 }
 
@@ -442,13 +448,9 @@ impl GameTree {
     }
 
     fn position(&self, node: ffi::Uuid) -> Box<CurPosition> {
-        Box::new(
-            CurPosition(
-                self.inner
-                    .board_at(node.into())
-                    .expect("invalid node")
-            )
-        )
+        Box::new(CurPosition(
+            self.inner.board_at(node.into()).expect("invalid node"),
+        ))
     }
 
     fn has_prev_move(&self, node: ffi::Uuid) -> bool {
@@ -457,39 +459,27 @@ impl GameTree {
 
     fn prev_move(&self, node: ffi::Uuid) -> Box<Move> {
         let node = node.into();
-        let m = self.inner.prev_move(node)
-            .unwrap_or(sac::Move::Put {
-                role: sac::Role::Pawn,
-                to: sac::Square::A1,
-            });
-        let pos = self.inner
-            .board_before(node)
-            .expect("invalid node");
+        let m = self.inner.prev_move(node).unwrap_or(sac::Move::Put {
+            role: sac::Role::Pawn,
+            to: sac::Square::A1,
+        });
+        let pos = self.inner.board_before(node).expect("invalid node");
         let san = sac::SanPlus::from_move(pos, &m);
 
-        Box::new(
-            Move {
-                inner: m,
-                san,
-            }
-        )
+        Box::new(Move { inner: m, san })
     }
 
     fn has_prev_node(&self, node: ffi::Uuid) -> bool {
         self.inner.parent(node.into()).is_some()
     }
     fn prev_node(&self, node: ffi::Uuid) -> ffi::Uuid {
-        self.inner.parent(node.into())
-            .unwrap_or_default()
-            .into()
+        self.inner.parent(node.into()).unwrap_or_default().into()
     }
     fn has_next_mainline_node(&self, node: ffi::Uuid) -> bool {
         self.inner.mainline(node.into()).is_some()
     }
     fn next_mainline_node(&self, node: ffi::Uuid) -> ffi::Uuid {
-        self.inner.mainline(node.into())
-            .unwrap_or_default()
-            .into()
+        self.inner.mainline(node.into()).unwrap_or_default().into()
     }
 
     fn variations(&self, node: ffi::Uuid) -> Vec<ffi::Uuid> {
@@ -521,13 +511,15 @@ impl GameTree {
             cur_node = node;
         }
 
-        node_vec.into_iter()
+        node_vec
+            .into_iter()
             .map(|val| val.into())
             .collect::<Vec<ffi::Uuid>>()
     }
 
     fn add_node(&mut self, node: ffi::Uuid, m: Box<Move>) -> ffi::Uuid {
-        self.inner.add_node(node.into(), m.inner)
+        self.inner
+            .add_node(node.into(), m.inner)
             .expect("invalid node in add_node")
             .into()
     }

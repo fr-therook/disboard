@@ -1,5 +1,7 @@
 #include "movelistmodel.h"
 
+#include <QHash>
+
 class MoveListModel::p {
     friend MoveListModel;
 public:
@@ -134,7 +136,21 @@ QVariant MoveListModel::data(const QModelIndex &idx, int role) const {
     if (role == VariationsRole) {
         auto variations = p->c->board().siblings(node);
         if (variations.empty()) return {};
-        return QVariant::fromValue(variations);
+
+        QVector<VariationInfo> variationsRoleVec;
+        for (auto variation: variations) {
+            VariationInfo map;
+
+            auto variationMove = p->c->board().lastMove(variation);
+            if (!variationMove.has_value()) continue; // impossible to reach anyway
+
+            variationsRoleVec.emplace_back(
+                    variation,
+                    variationMove->toString()
+            );
+        }
+
+        return QVariant::fromValue(variationsRoleVec);
     }
 
     return {};

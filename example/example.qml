@@ -21,6 +21,56 @@ Window {
             id: board
         }
 
+        Component {
+            id: tableViewDelegate
+
+            ItemDelegate {
+                readonly property var model2: model
+
+                visible: model.node != null
+                horizontalPadding: 16
+
+                contentItem: RowLayout {
+                    Text {
+                        Layout.alignment: Qt.AlignVCenter
+
+                        text: model.node != null ? model.display : ""
+                    }
+
+                    ListView {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        visible: model2.variations != null
+                        orientation: ListView.Horizontal
+                        clip: true
+
+                        model: model2.variations
+
+                        delegate: variationListViewDelegate
+                    }
+                }
+
+                onClicked: board.controller.curNode = model.node
+            }
+        }
+
+        Component {
+            id: variationListViewDelegate
+
+            Button {
+                anchors.verticalCenter: parent.verticalCenter
+
+                horizontalPadding: 8
+
+                background.implicitWidth: 0
+
+                text: modelData.display
+                highlighted: true
+                font.pointSize: 8
+            }
+        }
+
         TableView {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -38,25 +88,7 @@ Window {
                 return width / 2;
             }
 
-            delegate: ItemDelegate {
-                visible: model.node != null
-                horizontalPadding: 16
-
-                contentItem: RowLayout {
-                    Text {
-                        Layout.fillWidth: true
-
-                        text: model.node != null ? model.display : ""
-                    }
-
-                    Text {
-                        visible: model.variations != null
-                        text: model.variations != null ? "..." : ""
-                    }
-                }
-
-                onClicked: board.controller.curNode = model.node
-            }
+            delegate: tableViewDelegate
         }
     }
 }

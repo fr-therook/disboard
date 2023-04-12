@@ -7,6 +7,22 @@
 
 #include "controller.h"
 
+class VariationInfo {
+    Q_GADGET
+    QML_VALUE_TYPE(variationInfo)
+    Q_PROPERTY(QUuid node MEMBER node CONSTANT)
+    Q_PROPERTY(QString display MEMBER display CONSTANT)
+
+public:
+    VariationInfo() = default;
+    VariationInfo(QUuid node, QString display)
+        : node(node), display(std::move(display)) {}
+
+private:
+    QUuid node;
+    QString display;
+};
+
 class MoveListModel : public QAbstractTableModel {
 Q_OBJECT
 
